@@ -350,6 +350,16 @@ def _apply_edit(src_path: str, dst_path: str, op: str, params: Dict) -> None:
                 if chunk is None:
                     break
                 n = len(chunk[0])
+                if op == "trim":
+                    # Keep only the selected frames: the output is exactly
+                    # (end_f - start_f) frames long, not a silence-padded
+                    # copy of the original.
+                    lo = max(0, start_f - pos)
+                    hi = min(n, end_f - pos)
+                    if hi > lo:
+                        w.write_chunk([c[lo:hi] for c in chunk])
+                    pos += n
+                    continue
                 out = []
                 for c in chunk:
                     o = []
@@ -358,9 +368,6 @@ def _apply_edit(src_path: str, dst_path: str, op: str, params: Dict) -> None:
                         x = v
                         if op == "gain":
                             x = x * gain
-                        if op == "trim":
-                            if gpos < start_f or gpos >= end_f:
-                                x = 0.0
                         if op == "silence":
                             if start_f <= gpos < end_f:
                                 x = 0.0

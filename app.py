@@ -359,8 +359,10 @@ def _apply_edit(src_path: str, dst_path: str, op: str, params: Dict) -> None:
                         if op == "gain":
                             x = x * gain
                         if op == "trim":
+                            # Drop samples outside the selection so the new
+                            # file contains only [start, end) — not silence.
                             if gpos < start_f or gpos >= end_f:
-                                x = 0.0
+                                continue
                         if op == "silence":
                             if start_f <= gpos < end_f:
                                 x = 0.0
